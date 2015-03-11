@@ -196,7 +196,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x000F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
       ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.int_value = source_register_1_idx;
+      ret_trace_op.int_value = imm16;
     }
     break;
 
@@ -205,7 +205,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x000F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
       ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.int_value = source_register_1_idx;
+      ret_trace_op.int_value = imm16;
     }
     break;
 
@@ -223,7 +223,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
       ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.int_value = source_register_1_idx;
+      ret_trace_op.int_value = imm16;
     }
     break;
 
@@ -241,7 +241,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x000F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
       ret_trace_op.scalar_registers[1] = destination_register_idx;
-      ret_trace_op.int_value = source_register_1_idx;
+      ret_trace_op.int_value = imm16;
     }
     break;
 
@@ -260,10 +260,10 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int idx_val = (instruction & 0x00C00000) >> 22;
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      int imm16 = (instruction & 0x0000FFFF);
+      int src_register_idx = (instruction & 0x00000F00) >> 8;
       ret_trace_op.idx = idx_val;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.int_value = imm16;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
+      ret_trace_op.scalar_registers[1] = src_register_idx;
     }
     break;
 
@@ -349,11 +349,23 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     case OP_PUSHMATRIX:       // deprecated 
     case OP_POPMATRIX:   // deprecated 
     case OP_BEGINPRIMITIVE: 
+    {
+      int prim = (instruction & 0x003F0000) >> 16;
+      ret_trace_op.primitive_type = prim;
+    }
+    break;
+
     case OP_ENDPRIMITIVE:
     case OP_LOADIDENTITY:  // deprecated 
     case OP_FLUSH: 
     case OP_DRAW: 
     case OP_BRN: 
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_BRZ:
     case OP_BRP:
     case OP_BRNZ:
