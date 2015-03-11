@@ -520,10 +520,37 @@ int ExecuteInstruction(const TraceOp &trace_op)
       g_vector_registers[trace_op.vector_registers[0]].element[trace_op.idx].int_value = 
         source_value_1;
     }
-    case OP_LDB: 
+    case OP_LDB:
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = trace_op.int_value;
+      g_scalar_registers[trace_op.scalar_registers[0]].int_value = g_memory[source_value_1 + source_value_2];
+
+      SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
+    }
     case OP_LDW:
-    case OP_STB:  
-    case OP_STW: 
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = trace_op.int_value;
+      int dest = g_memory[source_value_1 + source_value_2 + 1] << 8 | g_memory[source_value_1 + source_value_2];
+      g_scalar_registers[trace_op.scalar_registers[0]].int_value = dest;
+      
+      SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
+    }
+    case OP_STB:
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = trace_op.int_value;
+      g_memory[source_value_1 + source_value_2] = g_scalar_registers[trace_op.scalar_registers[0]].int_value;
+    }
+    case OP_STW: //Do tomorrow
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = trace_op.int_value;
+      int value = g_scalar_registers[trace_op.scalar_registers[0]].int_value;
+      //g_memory[source_value_1 + source_value_2 + 1]  = (source)
+      
+    }
     case OP_SETVERTEX: 
     case OP_SETCOLOR:
     case OP_ROTATE:  // optional 
