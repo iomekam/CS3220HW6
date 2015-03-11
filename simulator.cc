@@ -367,14 +367,66 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     break;
 
     case OP_BRZ:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_BRP:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_BRNZ:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_BRNP:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_BRZP:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
     case OP_BRNZP:
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
     case OP_JMP:
+    {
+      int prim = (instruction & 0x000F0000);
+      ret_trace_op.scalar_registers[0] = prim;
+    }
+    break;
+
     case OP_JSR: 
+    {
+      int prim = (instruction & 0x0000FFFF);
+      ret_trace_op.int_value = prim;
+    }
+    break;
+
     case OP_JSRR: 
+
+      int prim = (instruction & 0x000F0000);
+      ret_trace_op.scalar_registers[0] = prim;
+    }
+    break;
+    
     case OP_HALT: 
       break; 
       
