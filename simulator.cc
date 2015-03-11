@@ -247,12 +247,49 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_MOVI_F: 
     case OP_VMOV:
     {
-     // g_vector_registers[trace_op.vector_registers[0]].element = 
-        //g_vector_registers[trace_op.vector_registers[1]].element;
+      ScalarRegister* dest = g_vector_registers[trace_op.vector_registers[0]].element;
+      ScalarRegister* src = g_vector_registers[trace_op.vector_registers[1]].element;
+
+      memcpy(dest, src, sizeof(ScalarRegister));
     } 
     case OP_VMOVI: 
-    case OP_CMP: 
+    {
+      for(int count = 0; count < 3; count++) {
+           g_vector_registers[trace_op.vector_registers[0]].element[count].int_value = trace_op.int_value;
+        }
+    }
+    case OP_CMP:
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = g_scalar_registers[trace_op.scalar_registers[2]].int_value;
+
+      int value = 0;
+
+      if(source_value_1 < source_value_2) {
+        value = -1;
+      }
+      else {
+        value = 1;
+      }
+
+      SetConditionCodeInt(value, 0);
+    } 
     case OP_CMPI:
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = trace_op.int_value;
+
+      int value = 0;
+
+      if(source_value_1 < source_value_2) {
+        value = -1;
+      }
+      else {
+        value = 1;
+      }
+
+      SetConditionCodeInt(value, 0);
+    }
     case OP_VCOMPMOV: 
     case OP_VCOMPMOVI:  
     case OP_LDB: 
