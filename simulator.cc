@@ -421,7 +421,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     break;
 
     case OP_JSRR: 
-
+    {
       int prim = (instruction & 0x000F0000);
       ret_trace_op.scalar_registers[0] = prim;
     }
