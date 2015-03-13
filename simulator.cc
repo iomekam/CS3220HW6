@@ -534,8 +534,8 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_MOVI_F: 
     case OP_VMOV:
     {
-      int idxD = trace_op.scalar_registers[0];
-      int idx = trace_op.scalar_registers[1];
+      int idxD = trace_op.vector_registers[0];
+      int idx = trace_op.vector_registers[1];
       ScalarRegister* dest = g_vector_registers[idxD].element;
       ScalarRegister* src = g_vector_registers[idx].element;
 
@@ -546,7 +546,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     case OP_VMOVI: 
     {
-      int idx = trace_op.scalar_registers[0];
+      int idx = trace_op.vector_registers[0];
       for(int count = 0; count < 4; count++) {
            g_vector_registers[idx].element[count].int_value = trace_op.int_value;
         }
@@ -592,8 +592,9 @@ int ExecuteInstruction(const TraceOp &trace_op)
     break;
     case OP_VCOMPMOV: 
     {
+      int idx = trace_op.vector_registers[0];
       int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
-      g_vector_registers[trace_op.vector_registers[0]].element[trace_op.idx].int_value = 
+      g_vector_registers[idx].element[trace_op.idx].int_value = 
         source_value_1;
     }
 
@@ -602,7 +603,8 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_VCOMPMOVI:  
     {
       int source_value_1 = trace_op.int_value;
-      g_vector_registers[trace_op.vector_registers[0]].element[trace_op.idx].int_value = 
+      int idx = trace_op.vector_registers[0];
+      g_vector_registers[idx].element[trace_op.idx].int_value = 
         source_value_1;
     }
 
@@ -640,22 +642,52 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     break;
 
-    case OP_STW: //Do tomorrow
+    case OP_STW:
     {
       int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
       int source_value_2 = trace_op.int_value;
       int value = g_scalar_registers[trace_op.scalar_registers[0]].int_value;
-      //g_memory[source_value_1 + source_value_2 + 1]  = (source)
+      g_memory[source_value_1 + source_value_2 + 1]  = value >> 8;
+      g_memory[source_value_1 + source_value_2]  = value & 0x00FF;
     }
+
     break;
 
     case OP_SETVERTEX: 
+    {
+      int x = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
+      int y = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+      int z = g_vector_registers[trace_op.vector_registers[0]].element[3].int_value;
+
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].x_value = x >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].y_value = y >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].z_value = z >> 4;
+
+    }
     break;
     case OP_SETCOLOR:
+    {
+      int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
+      int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
+      int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b >> 4;
+    }
     break;
     case OP_ROTATE:  // optional 
     break;
-    case OP_TRANSLATE: 
+    case OP_TRANSLATE:
+    {
+      int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
+      int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
+      int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b;
+    }
     break;
     case OP_SCALE:  // optional 
     break;
