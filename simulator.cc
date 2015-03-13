@@ -592,8 +592,9 @@ int ExecuteInstruction(const TraceOp &trace_op)
     break;
     case OP_VCOMPMOV: 
     {
+      int idx = trace_op.scalar_registers[0];
       int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
-      g_vector_registers[trace_op.vector_registers[0]].element[trace_op.idx].int_value = 
+      g_vector_registers[idx].element[trace_op.idx].int_value = 
         source_value_1;
     }
 
@@ -602,7 +603,8 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_VCOMPMOVI:  
     {
       int source_value_1 = trace_op.int_value;
-      g_vector_registers[trace_op.vector_registers[0]].element[trace_op.idx].int_value = 
+      int idx = trace_op.scalar_registers[0];
+      g_vector_registers[idx].element[trace_op.idx].int_value = 
         source_value_1;
     }
 
