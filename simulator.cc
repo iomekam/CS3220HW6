@@ -51,12 +51,12 @@ unsigned int g_program_halt = 0;
 void SetConditionCodeInt(const int16_t val1, const int16_t val2) 
 {
   if(val1 < val2) {
-    g_condition_code_register.int_value = g_condition_code_register.int_value | 1;
+    g_condition_code_register.int_value = g_condition_code_register.int_value & 1;
   }
   else if(val1 == val2) {
-    g_condition_code_register.int_value = g_condition_code_register.int_value | 2;
+    g_condition_code_register.int_value = g_condition_code_register.int_value & 2;
   }
-  else {
+  else{
     g_condition_code_register.int_value = g_condition_code_register.int_value & 4;
   }
 }
@@ -657,13 +657,68 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_FLUSH: 
     case OP_DRAW: 
     case OP_BRN: 
+    {
+      if(g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
     case OP_BRZ:
+    {
+      if(g_condition_code_register.int_value == 2)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
     case OP_BRP:
+    {
+      if(g_condition_code_register.int_value == 1)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRNZ:
+    {
+      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 2)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRNP:
+    {
+      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 4)
+      { 
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRZP:
+    {
+      if(g_condition_code_register.int_value == 2 || g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRNZP:
+    {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+    }
+    break; 
+
     case OP_JMP:
+    {
+
+    }
+    break;
     case OP_JSR: 
     case OP_JSRR: 
       break; 
