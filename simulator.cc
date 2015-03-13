@@ -213,8 +213,8 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
       int source_register_1_idx = (instruction & 0x00003F00) >> 8;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.scalar_registers[1] = source_register_1_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[1] = source_register_1_idx;
     }
     break;
 
@@ -222,7 +222,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
       ret_trace_op.int_value = imm16;
     }
     break;
@@ -314,35 +314,35 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     case OP_SETVERTEX: 
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
     }
     break;
 
     case OP_SETCOLOR:
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
     }
     break;
 
     case OP_ROTATE:  // optional 
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
     }
     break;
 
     case OP_TRANSLATE: 
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
     }
     break;
 
     case OP_SCALE:  // optional 
     {
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
     }
     break;
     
@@ -664,74 +664,72 @@ int ExecuteInstruction(const TraceOp &trace_op)
       g_gpu_vertex_registers[2].z_value = z;
 
     }
-
     break;
     case OP_SETCOLOR:
+    break;
     case OP_ROTATE:  // optional 
+    break;
     case OP_TRANSLATE: 
+    break;
     case OP_SCALE:  // optional 
+    break;
     case OP_PUSHMATRIX:       // deprecated 
+    break;
     case OP_POPMATRIX:   // deprecated 
+    break;
     case OP_BEGINPRIMITIVE: 
+    break;
     case OP_ENDPRIMITIVE:
+    break;
     case OP_LOADIDENTITY:  // deprecated 
+    break;
     case OP_FLUSH: 
+    break;
     case OP_DRAW: 
+    break;
     case OP_BRN: 
     {
-      if(g_condition_code_register.int_value == 4)
-      {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
-      }
+
     }
     break; 
     case OP_BRZ:
     {
-      if(g_condition_code_register.int_value == 2)
-      {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
-      }
+
     }
     break; 
     case OP_BRP:
     {
       if(g_condition_code_register.int_value == 1)
       {
-        g_current_pc = g_current_pc - (trace_op.int_value * 4);
+        ret_next_instruction_idx = trace_op.int_value;
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
       }
     }
     break; 
 
     case OP_BRNZ:
     {
-      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 2)
-      {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
-      }
+
     }
     break; 
 
     case OP_BRNP:
     {
-      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 4)
-      { 
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
-      }
+
     }
     break; 
 
     case OP_BRZP:
     {
-      if(g_condition_code_register.int_value == 2 || g_condition_code_register.int_value == 4)
-      {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
-      }
+
     }
     break; 
 
     case OP_BRNZP:
     {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
     }
     break; 
 
@@ -740,14 +738,15 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     }
     break;
-    case OP_JSR: 
+    case OP_JSR:
+    break; 
     case OP_JSRR: 
-      break; 
+    break; 
       
 
     case OP_HALT: 
-      g_program_halt = 1; 
-      break; 
+    g_program_halt = 1; 
+    break; 
 
     default:
     break;
@@ -903,6 +902,7 @@ int main(int argc, char **argv)
   for (;;) {
     TraceOp current_op = g_trace_ops[g_scalar_registers[PC_IDX].int_value];
     int idx = ExecuteInstruction(current_op);
+    cout << "The contents of idx:" << idx;
     g_current_pc = g_scalar_registers[PC_IDX].int_value; // debugging purpose only 
     if (current_op.opcode == OP_JSR || current_op.opcode == OP_JSRR)
       g_scalar_registers[LR_IDX].int_value = (g_scalar_registers[PC_IDX].int_value + 1) << 2 ;
