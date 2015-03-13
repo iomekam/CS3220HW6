@@ -51,13 +51,13 @@ unsigned int g_program_halt = 0;
 void SetConditionCodeInt(const int16_t val1, const int16_t val2) 
 {
   if(val1 < val2) {
-    g_condition_code_register.int_value = g_condition_code_register.int_value & 1;
+    g_condition_code_register.int_value = 4;
   }
   else if(val1 == val2) {
-    g_condition_code_register.int_value = g_condition_code_register.int_value & 2;
+    g_condition_code_register.int_value = 2;
   }
-  else{
-    g_condition_code_register.int_value = g_condition_code_register.int_value & 4;
+  else {
+    g_condition_code_register.int_value = 1;
   }
 }
 
@@ -249,10 +249,10 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int idx_val = (instruction & 0x00C00000) >> 22;
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      int source_register_1_idx = (instruction & 0x00000F00) >> 8;
+      int src_register_idx = (instruction & 0x00000F00) >> 8;
       ret_trace_op.idx = idx_val;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.scalar_registers[1] = source_register_1_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
+      ret_trace_op.scalar_registers[1] = src_register_idx;
     }
     break;
 
@@ -260,10 +260,10 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int idx_val = (instruction & 0x00C00000) >> 22;
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      int src_register_idx = (instruction & 0x00000F00) >> 8;
+      int src_register_idx = (instruction & 0x0000FFFF);
       ret_trace_op.idx = idx_val;
       ret_trace_op.vector_registers[0] = destination_register_idx;
-      ret_trace_op.scalar_registers[1] = src_register_idx;
+      ret_trace_op.int_value = src_register_idx;
     }
     break;
 
@@ -480,7 +480,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_ADDI_F: 
     case OP_VADD:
     {
-      for(int count = 0; count < 3; count++) {
+      for(int count = 0; count < 4; count++) {
           int source_value_1 = g_vector_registers[trace_op.vector_registers[1]].element[count].int_value;
           int source_value_2 = g_vector_registers[trace_op.vector_registers[2]].element[count].int_value;
           g_vector_registers[trace_op.vector_registers[0]].element[count].int_value = 
@@ -534,18 +534,21 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_MOVI_F: 
     case OP_VMOV:
     {
-      ScalarRegister* dest = g_vector_registers[trace_op.vector_registers[0]].element;
-      ScalarRegister* src = g_vector_registers[trace_op.vector_registers[1]].element;
+      int idxD = trace_op.scalar_registers[0];
+      int idx = trace_op.scalar_registers[1];
+      ScalarRegister* dest = g_vector_registers[idxD].element;
+      ScalarRegister* src = g_vector_registers[idx].element;
 
-      memcpy(dest, src, sizeof(ScalarRegister));
+      memcpy(dest, src, sizeof(ScalarRegister)*4);
     } 
 
     break;
 
     case OP_VMOVI: 
     {
-      for(int count = 0; count < 3; count++) {
-           g_vector_registers[trace_op.vector_registers[0]].element[count].int_value = trace_op.int_value;
+      int idx = trace_op.scalar_registers[0];
+      for(int count = 0; count < 4; count++) {
+           g_vector_registers[idx].element[count].int_value = trace_op.int_value;
         }
     }
 
@@ -561,7 +564,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
       if(source_value_1 < source_value_2) {
         value = -1;
       }
-      else {
+      else if(source_value_1 > source_value_2){
         value = 1;
       }
 
@@ -579,7 +582,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
       if(source_value_1 < source_value_2) {
         value = -1;
       }
-      else {
+      else if(source_value_1 > source_value_2) {
         value = 1;
       }
 
@@ -676,7 +679,8 @@ int ExecuteInstruction(const TraceOp &trace_op)
     {
       if(g_condition_code_register.int_value == 1)
       {
-        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+        g_current_pc = g_current_pc + (trace_op.int_value << 2);
+        ret_next_instruction_idx = g_current_pc;
       }
     }
     break; 
