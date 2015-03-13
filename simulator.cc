@@ -40,6 +40,7 @@ unsigned int g_instruction_count = 0;
 unsigned int g_vertex_id = 0; 
 unsigned int g_current_pc = 0; 
 unsigned int g_program_halt = 0; 
+unsigned int active_vertex_reg = 0;
 
 ////////////////////////////////////////////////////////////////////////
 // desc: Set g_condition_code_register depending on the values of val1 and val2
@@ -350,12 +351,12 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     case OP_POPMATRIX:   // deprecated 
     case OP_BEGINPRIMITIVE: 
     {
-      int prim = (instruction & 0x003F0000) >> 16;
+      int prim = (instruction & 0x000F0000) >> 16;
       ret_trace_op.primitive_type = prim;
     }
     break;
 
-    case OP_ENDPRIMITIVE:
+    case OP_ENDPRIMITIVE:  //deprecated
     case OP_LOADIDENTITY:  // deprecated 
     case OP_FLUSH: 
     case OP_DRAW: 
@@ -465,8 +466,18 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     case OP_ADD_F:
       {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+      int source_value_2 = g_scalar_registers[trace_op.scalar_registers[2]].int_value;
+      cout << "Source 1: " << source_value_1 << endl;
+      cout << "Source 2: " << source_value_2 << endl;
 
+      g_scalar_registers[trace_op.scalar_registers[0]].int_value = 
+        source_value_1 + source_value_2;
+        cout << "res: " << g_scalar_registers[trace_op.scalar_registers[0]].int_value << endl;
+        cout << "added: " << (float) FIXED_TO_FLOAT1114(g_scalar_registers[trace_op.scalar_registers[0]].int_value) << endl;
+      SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
       }  
+      break;
     case OP_ADDI_D:
       {
         int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
@@ -478,6 +489,19 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
       break;
     case OP_ADDI_F: 
+    {
+      int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
+        int source_value_2 = trace_op.int_value;
+        cout << "Trace op val: " << trace_op.int_value << endl;
+        cout << "Source 1: " << source_value_1 << endl;
+        cout << "Source 2: " << source_value_2 << endl;
+        cout << "Test: " << (float) FIXED_TO_FLOAT1114(320);
+
+        g_scalar_registers[trace_op.scalar_registers[0]].int_value = 
+          source_value_1 + source_value_2;
+        SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
+    }
+    break;
     case OP_VADD:
     {
       for(int count = 0; count < 4; count++) {
@@ -532,14 +556,24 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     break;
     case OP_MOVI_F: 
+    {
+      int source_value_1 = trace_op.int_value;
+      g_scalar_registers[trace_op.scalar_registers[0]].int_value = source_value_1;
+
+      SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
+    }
     case OP_VMOV:
     {
-      int idxD = trace_op.vector_registers[0];
-      int idx = trace_op.vector_registers[1];
-      ScalarRegister* dest = g_vector_registers[idxD].element;
-      ScalarRegister* src = g_vector_registers[idx].element;
+      // int idxD = trace_op.vector_registers[0];
+      // int idx = trace_op.vector_registers[1];
+      // ScalarRegister* dest = g_vector_registers[idxD].element;
+      // ScalarRegister* src = g_vector_registers[idx].element;
 
-      memcpy(dest, src, sizeof(ScalarRegister)*4);
+      // memcpy(dest, src, sizeof(ScalarRegister)*4);
+      int idx = trace_op.vector_registers[0];
+      for(int count = 0; count < 4; count++) {
+           g_vector_registers[idx].element[count].int_value = g_vector_registers[trace_op.vector_registers[1]].element[count].int_value;
+      }
     } 
 
     break;
@@ -659,9 +693,15 @@ int ExecuteInstruction(const TraceOp &trace_op)
       int y = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
       int z = g_vector_registers[trace_op.vector_registers[0]].element[3].int_value;
 
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].x_value = x >> 4;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].y_value = y >> 4;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].z_value = z >> 4;
+
+      g_gpu_vertex_registers[active_vertex_reg].x_value = x >> 4;
+      g_gpu_vertex_registers[active_vertex_reg].y_value = y >> 4;
+      g_gpu_vertex_registers[active_vertex_reg].z_value = z >> 4;
+      active_vertex_reg ++;
+      if(active_vertex_reg > 2)
+      {
+        active_vertex_reg = 0;
+      }
 
     }
     break;
@@ -670,23 +710,30 @@ int ExecuteInstruction(const TraceOp &trace_op)
       int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
       int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
       int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+      cout << "R: " << r << endl;
+      cout << "R: " << (r >>4) << endl;
+      cout << "G: " << g << endl;
+      cout << "B: " << b << endl;
 
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r >> 4;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g >> 4;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b >> 4;
+      cout << "Trace Vector : " << trace_op.vector_registers[0] << endl;
+
+      g_gpu_vertex_registers[0].r_value = (r >> 4);
+      g_gpu_vertex_registers[0].g_value = (g >> 4);
+      g_gpu_vertex_registers[0].b_value = (b >> 4);
     }
     break;
     case OP_ROTATE:  // optional 
     break;
     case OP_TRANSLATE:
     {
-      int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
-      int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
-      int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+      g_gpu_vertex_registers[0].x_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[1].int_value);
+      g_gpu_vertex_registers[0].y_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[2].int_value);
 
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g;
-      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b;
+      g_gpu_vertex_registers[1].x_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[1].int_value);
+      g_gpu_vertex_registers[1].y_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[2].int_value);
+
+      g_gpu_vertex_registers[2].x_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[1].int_value);
+      g_gpu_vertex_registers[2].y_value += FIXED1114_TO_INT(g_vector_registers[trace_op.vector_registers[0]].element[2].int_value);
     }
     break;
     case OP_SCALE:  // optional 
@@ -696,14 +743,30 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_POPMATRIX:   // deprecated 
     break;
     case OP_BEGINPRIMITIVE: 
+    {
+      if(trace_op.primitive_type == 0){//line
+        g_gpu_status_register.int_value = 8;
+      }
+      else//triangle
+      {
+        g_gpu_status_register.int_value = 4;
+      }
+      
+    }
     break;
-    case OP_ENDPRIMITIVE:
+    case OP_ENDPRIMITIVE: //deprecated
     break;
     case OP_LOADIDENTITY:  // deprecated 
     break;
     case OP_FLUSH: 
+    {
+      g_gpu_status_register.int_value = 2;
+    }
     break;
     case OP_DRAW: 
+    {
+      g_gpu_status_register.int_value = 1;
+    }
     break;
     case OP_BRN: 
     {
@@ -788,7 +851,6 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_JMP:
     {
       ret_next_instruction_idx = g_scalar_registers[trace_op.scalar_registers[0]].int_value >> 2;//trace_op.scalar_registers[0].int_value;
-      cout << "JUMP: _---------------: " << ret_next_instruction_idx;     
     }
     break;
     case OP_JSR:
@@ -963,7 +1025,6 @@ int main(int argc, char **argv)
   for (;;) {
     TraceOp current_op = g_trace_ops[g_scalar_registers[PC_IDX].int_value];
     int idx = ExecuteInstruction(current_op);
-    cout << "The contents of idx:" << idx;
     g_current_pc = g_scalar_registers[PC_IDX].int_value; // debugging purpose only 
     if (current_op.opcode == OP_JSR || current_op.opcode == OP_JSRR)
       g_scalar_registers[LR_IDX].int_value = (g_scalar_registers[PC_IDX].int_value + 1) << 2 ;
