@@ -408,7 +408,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     break;
     case OP_JMP:
     {
-      int prim = (instruction & 0x000F0000);
+      int prim = (instruction & 0x000F0000) >> 16;
       ret_trace_op.scalar_registers[0] = prim;
     }
     break;
@@ -422,7 +422,7 @@ TraceOp DecodeInstruction(const uint32_t instruction)
 
     case OP_JSRR: 
     {
-      int prim = (instruction & 0x000F0000);
+      int prim = (instruction & 0x000F0000) >> 16;
       ret_trace_op.scalar_registers[0] = prim;
     }
     break;
@@ -675,19 +675,33 @@ int ExecuteInstruction(const TraceOp &trace_op)
     break;
     case OP_BRN: 
     {
-
+      if(g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
+      }
     }
     break; 
     case OP_BRZ:
     {
-
+      if(g_condition_code_register.int_value == 2)
+      {
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
+      }
     }
     break; 
     case OP_BRP:
     {
       if(g_condition_code_register.int_value == 1)
       {
-        ret_next_instruction_idx = trace_op.int_value;
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
       }
       else
       {
@@ -698,35 +712,64 @@ int ExecuteInstruction(const TraceOp &trace_op)
 
     case OP_BRNZ:
     {
-
+      if(g_condition_code_register.int_value == 2 | g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
+      }
     }
     break; 
 
     case OP_BRNP:
     {
-
+      if(g_condition_code_register.int_value == 1 | g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
+      }
     }
     break; 
 
     case OP_BRZP:
     {
-
+      if(g_condition_code_register.int_value == 2 | g_condition_code_register.int_value == 1)
+      {
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
+      }
+      else
+      {
+        ret_next_instruction_idx = 0;
+      }
     }
     break; 
 
     case OP_BRNZP:
-    {
-    }
+        ret_next_instruction_idx = SignExtension(trace_op.int_value);
     break; 
 
     case OP_JMP:
     {
-
+      ret_next_instruction_idx = g_scalar_registers[trace_op.scalar_registers[0]].int_value >> 2;//trace_op.scalar_registers[0].int_value;
+      cout << "JUMP: _---------------: " << ret_next_instruction_idx;     
     }
     break;
     case OP_JSR:
+    {
+      g_scalar_registers[LR_IDX].int_value = g_scalar_registers[PC_IDX].int_value;
+      ret_next_instruction_idx = SignExtension(trace_op.int_value);
+    }
     break; 
     case OP_JSRR: 
+    {
+      g_scalar_registers[LR_IDX].int_value = g_scalar_registers[PC_IDX].int_value;
+      ret_next_instruction_idx = g_scalar_registers[trace_op.scalar_registers[0]].int_value >> 2;//trace_op.scalar_registers[0].int_value;
+    }
     break; 
       
 
