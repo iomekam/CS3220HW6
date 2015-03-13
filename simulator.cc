@@ -249,10 +249,10 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int idx_val = (instruction & 0x00C00000) >> 22;
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      int source_register_1_idx = (instruction & 0x00000F00) >> 8;
+      int src_register_idx = (instruction & 0x00000F00) >> 8;
       ret_trace_op.idx = idx_val;
-      ret_trace_op.scalar_registers[0] = destination_register_idx;
-      ret_trace_op.scalar_registers[1] = source_register_1_idx;
+      ret_trace_op.vector_registers[0] = destination_register_idx;
+      ret_trace_op.scalar_registers[1] = src_register_idx;
     }
     break;
 
@@ -260,10 +260,10 @@ TraceOp DecodeInstruction(const uint32_t instruction)
     {
       int idx_val = (instruction & 0x00C00000) >> 22;
       int destination_register_idx = (instruction & 0x003F0000) >> 16;
-      int src_register_idx = (instruction & 0x00000F00) >> 8;
+      int src_register_idx = (instruction & 0x0000FFFF);
       ret_trace_op.idx = idx_val;
       ret_trace_op.vector_registers[0] = destination_register_idx;
-      ret_trace_op.scalar_registers[1] = src_register_idx;
+      ret_trace_op.int_value = src_register_idx;
     }
     break;
 
@@ -294,8 +294,8 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x00F00000) >> 20;
       int source_register_1_idx = (instruction & 0x000F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
-      ret_trace_op.scalar_registers[1] = destination_register_idx;
-      ret_trace_op.scalar_registers[2] = source_register_1_idx;
+      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.scalar_registers[1] = source_register_1_idx;
       ret_trace_op.int_value = imm16;
     }
     break;
@@ -305,8 +305,8 @@ TraceOp DecodeInstruction(const uint32_t instruction)
       int destination_register_idx = (instruction & 0x00F00000) >> 20;
       int source_register_1_idx = (instruction & 0x000F0000) >> 16;
       int imm16 = (instruction & 0x0000FFFF);
-      ret_trace_op.scalar_registers[1] = destination_register_idx;
-      ret_trace_op.scalar_registers[2] = source_register_1_idx;
+      ret_trace_op.scalar_registers[0] = destination_register_idx;
+      ret_trace_op.scalar_registers[1] = source_register_1_idx;
       ret_trace_op.int_value = imm16;
     }
     break;
@@ -662,13 +662,68 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_FLUSH: 
     case OP_DRAW: 
     case OP_BRN: 
+    {
+      if(g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
     case OP_BRZ:
+    {
+      if(g_condition_code_register.int_value == 2)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
     case OP_BRP:
+    {
+      if(g_condition_code_register.int_value == 1)
+      {
+        g_current_pc = g_current_pc - (trace_op.int_value * 4);
+      }
+    }
+    break; 
+
     case OP_BRNZ:
+    {
+      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 2)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRNP:
+    {
+      if(g_condition_code_register.int_value == 1 || g_condition_code_register.int_value == 4)
+      { 
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRZP:
+    {
+      if(g_condition_code_register.int_value == 2 || g_condition_code_register.int_value == 4)
+      {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+      }
+    }
+    break; 
+
     case OP_BRNZP:
+    {
+        ret_next_instruction_idx = g_current_pc + (trace_op.int_value << 2);
+    }
+    break; 
+
     case OP_JMP:
+    {
+
+    }
+    break;
     case OP_JSR: 
     case OP_JSRR: 
       break; 
