@@ -659,17 +659,35 @@ int ExecuteInstruction(const TraceOp &trace_op)
       int y = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
       int z = g_vector_registers[trace_op.vector_registers[0]].element[3].int_value;
 
-      g_gpu_vertex_registers[0].x_value = x;
-      g_gpu_vertex_registers[1].y_value = y;
-      g_gpu_vertex_registers[2].z_value = z;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].x_value = x >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].y_value = y >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].z_value = z >> 4;
 
     }
     break;
     case OP_SETCOLOR:
+    {
+      int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
+      int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
+      int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g >> 4;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b >> 4;
+    }
     break;
     case OP_ROTATE:  // optional 
     break;
-    case OP_TRANSLATE: 
+    case OP_TRANSLATE:
+    {
+      int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
+      int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
+      int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
+
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].r_value = r;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].g_value = g;
+      g_gpu_vertex_registers[trace_op.vector_registers[0]].b_value = b;
+    }
     break;
     case OP_SCALE:  // optional 
     break;
