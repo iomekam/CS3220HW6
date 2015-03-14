@@ -8,3 +8,4 @@ addi.d r3 r3 7
 addi.d r3 r3 8
 addi.d r3 r3 9
 addi.d r3 r3 10
+halt

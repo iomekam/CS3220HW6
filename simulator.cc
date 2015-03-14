@@ -468,13 +468,9 @@ int ExecuteInstruction(const TraceOp &trace_op)
       {
       int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
       int source_value_2 = g_scalar_registers[trace_op.scalar_registers[2]].int_value;
-      cout << "Source 1: " << source_value_1 << endl;
-      cout << "Source 2: " << source_value_2 << endl;
 
       g_scalar_registers[trace_op.scalar_registers[0]].int_value = 
         source_value_1 + source_value_2;
-        cout << "res: " << g_scalar_registers[trace_op.scalar_registers[0]].int_value << endl;
-        cout << "added: " << (float) FIXED_TO_FLOAT1114(g_scalar_registers[trace_op.scalar_registers[0]].int_value) << endl;
       SetConditionCodeInt(g_scalar_registers[trace_op.scalar_registers[0]].int_value, 0);
       }  
       break;
@@ -492,10 +488,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
     {
       int source_value_1 = g_scalar_registers[trace_op.scalar_registers[1]].int_value;
         int source_value_2 = trace_op.int_value;
-        cout << "Trace op val: " << trace_op.int_value << endl;
-        cout << "Source 1: " << source_value_1 << endl;
-        cout << "Source 2: " << source_value_2 << endl;
-        cout << "Test: " << (float) FIXED_TO_FLOAT1114(320);
+
 
         g_scalar_registers[trace_op.scalar_registers[0]].int_value = 
           source_value_1 + source_value_2;
@@ -710,12 +703,7 @@ int ExecuteInstruction(const TraceOp &trace_op)
       int r = g_vector_registers[trace_op.vector_registers[0]].element[0].int_value;
       int g = g_vector_registers[trace_op.vector_registers[0]].element[1].int_value;
       int b = g_vector_registers[trace_op.vector_registers[0]].element[2].int_value;
-      cout << "R: " << r << endl;
-      cout << "R: " << (r >>4) << endl;
-      cout << "G: " << g << endl;
-      cout << "B: " << b << endl;
 
-      cout << "Trace Vector : " << trace_op.vector_registers[0] << endl;
 
       g_gpu_vertex_registers[0].r_value = (r >> 4);
       g_gpu_vertex_registers[0].g_value = (g >> 4);
