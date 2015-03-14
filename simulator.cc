@@ -745,11 +745,13 @@ int ExecuteInstruction(const TraceOp &trace_op)
     case OP_BEGINPRIMITIVE: 
     {
       if(trace_op.primitive_type == 0){//line
-        g_gpu_status_register.int_value = 8;
+        g_gpu_status_register.int_value |= 8;
+        g_gpu_status_register.int_value &= ~(4); // clear the primitive bit
       }
       else//triangle
       {
-        g_gpu_status_register.int_value = 4;
+        g_gpu_status_register.int_value |= 4;
+        g_gpu_status_register.int_value &= ~(8); 
       }
       
     }
@@ -760,12 +762,16 @@ int ExecuteInstruction(const TraceOp &trace_op)
     break;
     case OP_FLUSH: 
     {
-      g_gpu_status_register.int_value = 2;
+      g_gpu_status_register.int_value |= 2;
+      g_gpu_status_register.int_value &= ~(1);
+      
     }
     break;
     case OP_DRAW: 
     {
-      g_gpu_status_register.int_value = 1;
+      g_gpu_status_register.int_value |= 1;
+      g_gpu_status_register.int_value &= ~(2);
+      
     }
     break;
     case OP_BRN: 
